@@ -38,7 +38,7 @@ Please push the Jupyter Notebook or the Rmd + HTML files to your fork repository
 
 ### Dataset 
 
-The data-set can be found as `UKB_Phenotype/data_cleaned.csv`.
+The data-set can be found as `data_cleaned.csv`.
 
 \newpage
 
@@ -89,9 +89,18 @@ head(sub_UKBB) # show part of the data
 ```
 
 **Q1:** How many females and males are there in this data? Please show your code below how these numbers are computed.
+```{r}
+Gender <-table(sub_UKBB$f.22001.0.0)
+Gender
+barplot(Gender,main="Gender Diversity")
+
+```
  
 **Q2:** Can you tell what kind of trait it is for tinnitus? 
 A.Binary trait. B. Continuous trait. 
+
+**Answer**
+In general conditions, gender is considered as a binary trait. Because here only there are two values male or female. 
 
 **Q3:** Recode f.4803
 
@@ -133,6 +142,10 @@ for (i in new_column_names)
 
 What do you think has been achieved by recoding these fields?
 
+**Answer**
+For statistical analysis, we cant use the strings as input. So we need to code the responses into valid numbers. So we have recorded the responses into the numerical values. Here we replaced "No" by using the value "0". Similarly the values like "Yes, but not now, but have in the past", "Yes, now some of the time", "Yes, now a lot of the time"= 1, "Yes, now most or all of the time" are replaced by value "1". And the values like "Prefer not to answer", "Do not know" are replaced by the value "NA".
+
+
 **Q4:** Define case and control status of tinnitus for each participant in the study:
 
 ```{r}
@@ -155,6 +168,10 @@ head(df_recode,10)
 
 How many cases and how many controls do we have for this phenotpype?
 
+**Answer**
+
+Here there are two different groups or cases are founded and they are true and false. The dataset contains five controls. 
+
 **Q5:** Extract a subset of columns from all participants for association study. 
 
 ```{r}
@@ -166,6 +183,10 @@ head(df_cases,10)
 Please modify codes above to extract all the controls and keep only these columns: `FID`, `IID`, `cases`, `f.22001.0.0`, `f.21003.0.0`, `f.21003.1.0`, `f.21003.2.0`, `f.21003.3.0`. Please show the first 10 rows of the output.
 ```{r}
 # YOUR CODE
+df_cases  <- df_recode %>%
+  select(IID,FID,cases,f.22001.0.0,f.21003.0.0,f.21003.1.0,f.21003.2.0,f.21003.3.0)%>% 
+  filter(cases==TRUE)
+head(df_cases,10)  
 ```
 \newpage
 
@@ -173,11 +194,21 @@ Please modify codes above to extract all the controls and keep only these column
  
 **Q6:** Field 21003 contains the information of the age of participants, same as field 4803. Note that some of them have more than one age. Can you guess why?
 
+**Answer**
+
+This dataset is related to the disease dataset. Here the first age may be the age when the patient or respondent first noticed the problems or symptoms of the disease. And the second age may be the current age of the patient. So in some cases, both are same, which means they are considered as a new patient. They only noticed the problem or symptoms of the disease now. Other having the problems over the specific period of time. 
+
 **Q7:** For those with more than one age records, which age do you think should be used in the genetic association analysis?
+
+**Answer**
+
+We need to consider the age when they noticed the symptoms of the particular disease or problem. So we need to consider the age given first or smaller age between the two ages. in the given case the age field f.21003.0.0 needs to be used. 
+
 
 **Q8:** Please compute a summary of age information for controls (you can use `summary()` function in R):
 ```{r}
 #YOUR CODE
+summary(sub_UKBB$f.21003.0.0)
 ```
 \newpage
 
@@ -198,12 +229,35 @@ auto_data <- ISLR::Auto
 #  fit a linear regression model
 fit_1<-lm(mpg ~ weight, auto_data)
 summary(fit_1)
+
 ```
+**Answer**
+From the finds of the research, the p-value is found as "2.2e-16" this value is less than 0.05 at 95 % of the significance level. So we reject the null hypothesis. Which means there is no evidence to prove there is no relation between the two variables. And the correlation coefficient between the two variables is calculated as -0.007647. So we can say that there is a negative relation between the mph as well as weight. 
 
 **Q10:** Please create a new variable to indicate cars having MPG greater than 23 as 1, otherwise 0, then use logistic regrssion via `glm()` function to analyze association between weight and this new variable you just created. Please comment on what you find.
+```{r}
+auto_data
+newvariable <- ifelse(auto_data$mpg < 23, "0", "1")
+newvariable=as.integer(newvariable)
+auto_data1 <-data.frame(auto_data,newvariable)
+auto_data1
+
+lr.auto_data1 = glm(formula = newvariable ~ weight, data = auto_data1, family = binomial)
+print(summary(lr.auto_data1))
+```
+
+**Answer:**
+Above given results shows the results of logistic regression conducted on the modified auto_car dataset. 
 
 **Q11:** Find the `Estimates` from your asociation results summary. How do you interpret the estimated effects of weight in the context of linear regression, and in the context of logistic regression? (this question might be a bit challenging if you are not familiar with regression analysis; don't sweat if you cannot find the answer for it).
 
 ```{r}
 #YOUR CODE
+
+#linear regression
+linearRegression=lm(formula = newvariable ~ weight, data = auto_data1)
+linearRegression
+print(summary(linearRegression))
+print(summary(lr.auto_data1))
+
 ```
